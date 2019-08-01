@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context-4.0.xsd
+	http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!--配置整合mybatis过程-->
+    <!--１.配置数据库相关参数-->
+    <context:property-placeholder location="classpath:datasource.properties" ignore-unresolvable="true"/>
+    <context:property-placeholder location="classpath:redis-config.properties" ignore-unresolvable="true"/>
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="driverClass" value="${db.driverClassName}"/>
+        <property name="jdbcUrl" value="${db.url}"/>
+        <property name="user" value="${db.username}"/>
+        <property name="password" value="${db.password}"/>
+
+        <!-- c3p0连接池私有属性 -->
+        <property name="maxPoolSize" value="30"/>
+        <property name="minPoolSize" value="10"/>
+        <!--关闭连接后不自动commit -->
+        <property name="autoCommitOnClose" value="false"/>
+        <!-- 获取连接超时时间 -->
+        <property name="checkoutTimeout" value="10000"/>
+        <!-- 获取连接重试次数 -->
+        <property name="acquireRetryAttempts" value="3"/>
+    </bean>
+
+    <!-- 约定大于配置 -->
+    <!-- 3.配置sqlsessionfactory对象 -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!--注入数据库连接池-->
+        <property name="dataSource" ref="dataSource"/>
+        <!--扫描entity包,使用别名,多个用;隔开-->
+        <!--<property name="typeAliasesPackage" value="com.platform.pojo"/>-->
+        <!--扫描sql配置文件:mapper需要的xml文件-->
+        <property name="mapperLocations" value="classpath:mappers/*.xml"/>
+
+        <!-- 分页插件 -->
+        <property name="plugins">
+            <array>
+                <bean class="com.github.pagehelper.PageHelper">
+                    <property name="properties">
+                        <value>
+                            dialect=mysql
+                        </value>
+                    </property>
+                </bean>
+            </array>
+        </property>
+
+    </bean>
+
+    <!--４:配置扫描Dao接口包,动态实现DAO接口,注入到spring容器-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!-- 给出需要扫描的Dao接口-->
+        <property name="basePackage" value="com.platform.dao"/>
+    </bean>
+
+    <!--注入redisdao -->
+    <!--<bean class="com.platform.dao.cache.RedisDao" id="redisDao">-->
+    <!--<constructor-arg index="0" value="127.0.0.1"></constructor-arg>-->
+    <!--<constructor-arg index="1" value="6379"></constructor-arg>-->
+    <!--</bean>-->
+
+    <!--设置jedisPool链接池的配置-->
+    <bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+        <property name="maxTotal" value="${redis.maxTotal}"/>
+        <property name="maxIdle" value="${redis.maxIdle}"/>
+        <property name="maxWaitMillis" value="${redis.maxWaitMillis}"/>
+        <property name="testOnBorrow" value="${redis.testOnBorrow}"/>
+        <property name="testOnReturn" value="${redis.testOnReturn}"/>
+    </bean>
+
+    <!-- Redis连接工厂     -->
+    <bean id="redis4CacheConnectionFactory"
+          class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
+        <property name="timeout" value="${redis.timeout:10000}" />
+        <property name="database" value="${redis.dbIndex}"/>
+        <property name="poolConfig" ref="jedisPoolConfig" />
+    </bean>
+
+    <!--手动设置 key  与 value的序列化方式-->
+    <bean id="keySerializer" class="org.springframework.data.redis.serializer.StringRedisSerializer"/>
+    <bean id="valueSerializer" class="org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer"/>
+
+    <!--配置jedis模板  -->
+    <bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
+        <property name="connectionFactory" ref="redis4CacheConnectionFactory"/>
+        <property name="keySerializer" ref="keySerializer"/>
+        <property name="valueSerializer" ref="valueSerializer"/>
+        <property name="hashKeySerializer" ref="keySerializer"/>
+        <property name="hashValueSerializer" ref="valueSerializer"/>
+    </bean>
+
+    <bean id="redisCache" class="org.springframework.data.redis.cache.RedisCache">
+        <constructor-arg index="0" name="name" value="accountCache"/>
+        <constructor-arg index="1"><null/></constructor-arg>
+        <constructor-arg index="2" name="redisOperations" ref="redisTemplate"/>
+        <constructor-arg index="3" name="expiration" value="3000"/>
+    </bean>
+
+    <context:component-scan base-package="com.platform.redisService"/>
+
+
+</beans>

@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.platform.dao.UserMapper" >
+  <resultMap id="BaseResultMap" type="com.platform.pojo.User" >
+    <constructor >
+      <arg column="id" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="username" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="password" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="email" jdbcType="VARCHAR" javaType="java.lang.String" />
+      <arg column="status" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="role" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="total_score" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="resume_score" jdbcType="INTEGER" javaType="java.lang.Integer" />
+      <arg column="create_time" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+      <arg column="update_time" jdbcType="TIMESTAMP" javaType="java.util.Date" />
+    </constructor>
+  </resultMap>
+  <sql id="Base_Column_List">
+    id,username,password,email,status,role,total_score,resume_score,create_time,update_time
+  </sql>
+  <insert id="insert" parameterType="com.platform.pojo.User" >
+    insert into s_p_user (id, username, password, 
+      email, status, role, total_score,
+      resume_score, create_time, update_time
+      )
+    values (#{id,jdbcType=INTEGER}, #{username,jdbcType=VARCHAR}, #{password,jdbcType=VARCHAR}, 
+      #{email,jdbcType=VARCHAR}, #{status,jdbcType=INTEGER}, #{role,jdbcType=INTEGER}, #{totalScore,jdbcType=INTEGER},
+      #{resumeScore,jdbcType=INTEGER}, #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.platform.pojo.User" >
+    insert into s_p_user
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="username != null" >
+        username,
+      </if>
+      <if test="password != null" >
+        password,
+      </if>
+      <if test="email != null" >
+        email,
+      </if>
+      <if test="status != null">
+        status,
+      </if>
+      <if test="role != null" >
+        role,
+      </if>
+      <if test="totalScore != null" >
+        total_score,
+      </if>
+      <if test="resumeScore != null" >
+        resume_score,
+      </if>
+      <if test="createTime != null" >
+        create_time,
+      </if>
+      <if test="updateTime != null" >
+        update_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="username != null" >
+        #{username,jdbcType=VARCHAR},
+      </if>
+      <if test="password != null" >
+        #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="email != null" >
+        #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null" >
+        #{status,jdbcType=INTEGER},
+      </if>
+      <if test="role != null" >
+        #{role,jdbcType=INTEGER},
+      </if>
+      <if test="totalScore != null" >
+        #{totalScore,jdbcType=INTEGER},
+      </if>
+      <if test="resumeScore != null" >
+        #{resumeScore,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null" >
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null" >
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateUserByPrimaryKeySelective" parameterType="com.platform.pojo.User">
+    update s_p_user
+    <set>
+      <if test="username != null" >
+        username = #{username,jdbcType=VARCHAR},
+      </if>
+      <if test="password != null" >
+        password = #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="email != null" >
+        email = #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null" >
+        status = #{status,jdbcType=INTEGER},
+      </if>
+      <if test="role != null" >
+        role = #{role,jdbcType=INTEGER},
+      </if>
+      <if test="totalScore != null" >
+        total_score = #{totalScore,jdbcType=INTEGER},
+      </if>
+      <if test="resumeScore != null" >
+        resume_score = #{resumeScore,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null" >
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null" >
+        update_time = now(),
+      </if>
+    </set>
+    where id = #{id}
+  </update>
+  <select id="checkUsername"  resultType="int" parameterType="string">
+      select count(1)
+      from s_p_user
+      where username = #{username}
+    </select>
+  <select id="selectLogin" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List"/>
+    from s_p_user
+    where username = #{username}
+    and password = #{password}
+  </select>
+  <select id="selectList" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List"/>
+    from s_p_user
+  </select>
+  <select id="selectListByUsernameOrEmail" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List"/>
+    from s_p_user
+    <where>
+      <if test="username != null">
+        and username like #{username}
+      </if>
+      <if test="email != null">
+        and email = #{email}
+      </if>
+    </where>
+  </select>
+  <select id="selectListOrderByScoreDesc" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List"/>
+    from s_p_user
+    <where>
+      <if test="username != null">
+        and username = #{username}
+      </if>
+      <if test="email != null">
+        and email = #{email}
+      </if>
+    </where>
+    order by total_score desc
+  </select>
+  <select id="selectListOrderByResumeScoreDesc" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List"/>
+    from s_p_user
+    <where>
+      <if test="username != null">
+        and username = #{username}
+      </if>
+      <if test="email != null">
+        and email = #{email}
+      </if>
+    </where>
+    order by resume_score desc
+  </select>
+    <select id="selectByPrimaryKey" resultMap="BaseResultMap">
+      select
+      <include refid="Base_Column_List"/>
+      from s_p_user
+      where id = #{id}
+    </select>
+  <select id="getCount" resultType="java.lang.Integer">
+    select count(1) from s_p_user
+  </select>
+  <select id="checkEmail" resultType="java.lang.Integer">
+    select count(1)
+    from s_p_user
+    where email = #{email}
+  </select>
+  <select id="selectByUsername" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List"/>
+    from s_p_user
+    where username = #{username}
+  </select>
+</mapper>
